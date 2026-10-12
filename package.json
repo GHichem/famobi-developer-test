@@ -1,6 +1,7 @@
 {
   "name": "snake-game-starter",
   "version": "1.0.0",
+  "private": true,
   "description": "A small browser game starter for the Famobi development challenge.",
   "type": "module",
   "scripts": {
