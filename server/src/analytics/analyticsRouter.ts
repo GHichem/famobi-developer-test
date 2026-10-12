@@ -29,3 +29,18 @@ analyticsRouter.post('/events', async (request, response) => {
     id: document.id
   });
 });
+
+analyticsRouter.get('/events', async (_request, response) => {
+  const snapshot = await db
+    .collection('analyticsEvents')
+    .orderBy('receivedAt', 'desc')
+    .limit(100)
+    .get();
+
+  const events = snapshot.docs.map((document) => ({
+    id: document.id,
+    ...document.data()
+  }));
+
+  response.json({ events });
+});
