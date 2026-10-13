@@ -1,7 +1,7 @@
 export type FamobiGameEndReason = 'complete' | 'fail' | 'quit';
 
 export interface FamobiGameInterface {
-    
+
   init(load: Array<string | (() => void | Promise<unknown>)>): Promise<void>;
 
   gameReady(): void;
@@ -30,6 +30,7 @@ export interface FamobiGameInterface {
   gameMuted(isMuted?: boolean): void;
 
   isMuted(): boolean;
+  isPaused(): boolean;
 
   onPauseStateChange(handler: (paused: boolean) => void): void;
 

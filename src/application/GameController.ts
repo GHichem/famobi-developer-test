@@ -64,11 +64,12 @@ export class GameController {
     this.events.emit('ready', { occurredAt: Date.now() });
   }
 
-  startNewGame(): void {
-    this.resetPauseState();
-    this.simulation.start();
-    this.audio.play('start');
-  }
+startNewGame(): void {
+  this.resetPauseState();
+  this.simulation.start();
+  this.reconcilePauseState();
+  this.audio.play('start');
+}
 
   startAtLevel(level: number): void {
     const highestAllowedLevel = Math.min(this.profile.highestUnlockedLevel, LEVELS.length);
@@ -246,10 +247,9 @@ export class GameController {
     else this.simulation.resume();
   }
 
-  private resetPauseState(): void {
-    this.playerPauseActive = false;
-    this.systemPauseActive = false;
-  }
+private resetPauseState(): void {
+  this.playerPauseActive = false;
+}
 
   private persistProfile(): void {
     this.storage.saveProfile(this.profile);

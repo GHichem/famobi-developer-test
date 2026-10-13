@@ -3,7 +3,7 @@ import './style.css';
 import Phaser from 'phaser';
 
 import { GameController } from './application/GameController';
-import { LocalGameStorage } from './core/storage/GameStorage';
+import { FamobiGameStorage } from './integrations/famobi/FamobiGameStorage';
 import { SnakeScene } from './game/scenes/SnakeScene';
 import { SnakeGame } from './game/snakeGame';
 import type { Direction, GamePhase, GameSnapshot } from './game/types';
@@ -31,7 +31,7 @@ const muteButton = requiredElement<HTMLButtonElement>('#mute-button');
 const levelSelect = requiredElement<HTMLElement>('#level-select');
 
 const simulation = new SnakeGame();
-const controller = new GameController(simulation, new LocalGameStorage());
+const controller = new GameController(simulation, new FamobiGameStorage(window.GameInterface.storage));
 const famobiAdapter = new FamobiAdapter(controller, window.GameInterface);
 famobiAdapter.connect();
 const snakeScene = new SnakeScene(controller);
@@ -149,9 +149,12 @@ const renderInterface = (snapshot: GameSnapshot): void => {
   secondaryAction.hidden = !content.secondary;
 };
 
-const performPrimaryAction = (): void => {
+const performPrimaryAction = async (): Promise<void> => {
   switch (currentSnapshot.phase) {
     case 'menu':
+  await famobiAdapter.startGame(1);
+  controller.startNewGame();
+  break;
     case 'finished':
       controller.startNewGame();
       break;
@@ -169,8 +172,19 @@ const performPrimaryAction = (): void => {
   }
 };
 
-const togglePause = (): void => {
-  controller.togglePlayerPause();
+const togglePause = async (): Promise<void> => {
+  const snapshot = controller.getSnapshot();
+
+  if (snapshot.phase === 'playing') {
+    await famobiAdapter.pauseGame();
+    controller.togglePlayerPause();
+    return;
+  }
+
+  if (snapshot.phase === 'paused' && snapshot.pauseSource === 'player') {
+    await famobiAdapter.resumeGame();
+    controller.togglePlayerPause();
+  }
 };
 
 const renderAudioState = (): void => {
@@ -185,7 +199,9 @@ renderAudioState();
 
 primaryAction.addEventListener('click', performPrimaryAction);
 secondaryAction.addEventListener('click', () => controller.quitToMenu());
-pauseButton.addEventListener('click', togglePause);
+pauseButton.addEventListener('click', () => {
+  void togglePause();
+});
 muteButton.addEventListener('click', () => controller.togglePlayerMuted());
 
 document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach((button) => {
